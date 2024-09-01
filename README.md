@@ -32,12 +32,12 @@ We assume that the kubernetes cluster is up and running. We will do the followin
 ### 5. Register Microsoft Container Service
 We will issue the following Azure CLI commands to register the container service.
 ```
-    bash> 	az extension add --name aks-preview
-	bash> 	az extension update --name aks-preview
+    bash>   az extension add --name aks-preview
+    bash>   az extension update --name aks-preview
 
-	bash> 	az feature register --namespace "Microsoft.ContainerService" --name "GPUDedicatedVHDPreview"
-	bash> 	az feature show --namespace "Microsoft.ContainerService" --name "GPUDedicatedVHDPreview"
-	bash> 	az provider register --namespace Microsoft.ContainerService
+    bash>   az feature register --namespace "Microsoft.ContainerService" --name "GPUDedicatedVHDPreview"
+    bash>   az feature show --namespace "Microsoft.ContainerService" --name "GPUDedicatedVHDPreview"
+    bash>   az provider register --namespace Microsoft.ContainerService
 
 ```
 ### 6. Add nodepool to AKS Cluster
@@ -63,9 +63,14 @@ Now lets login to the ACR before you can upload any images to ACR.
     bash> az acr login --name <name-of-acr>
 ```
 
-### 7. Create Workload Images
-Let's create a docker images that we would like to run as a GPU workload. Browse the repo code and familarize yourself with the dockerfiles and the python files they refer. Note the --platform directive below that enables to generate a AMD64 based image as I was running the following command in Apple Silicon host. We will try a  
+### 7. Create Workload Image Locally
+Let's create a docker images that we would like to run as a GPU workload. This repo contains a dockerfile named Dockerfile.ce. At line # 1, this docker file pulls a PyTorch container base image from NVIDIA. Tag 24.07-py3 is the latest available at the time of this writing. This container image contains the complete source of the version of PyTorch in /opt/pytorch. It is a prebuild and installed in the default environment (/usr/local/lib/python3.10/dist-packages/torch). This container also includes the following pacakges: (a) Pyton 3.10, (b) CUDA, (c) NCCL backend, (d) JupyterLab and beyond. Please look at this link for more details [here](https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/rel-24-07.html). This docker file also copies mnist_entropy.py from current directory to working directory. The mnist_entropy.py is the python training workload we will distribute to demonstrate the distribution. In the end we have a entrypoint which we overwrite when we execute it through training operator. So, we can safely ingore. When run the following command to create a pytorch-mnist-ce-distributed image to a local docker registry.
 
 ```
-    bash> docker build  --platform="linux/amd64"  -t <your-tag-name:latest> .
+    bash> docker build  --platform="linux/amd64"  -t pytorch-mnist-ce-distributed:1.0 .
 ```
+### 8. Python Training Workload
+Feel free to browse mnist_entropy.py provided in this repol. This is a simple CNN we train to classify the CIFAR10 dataset. While this is a standard CNN code, the following are some points that are pertinent to training distribution. This code will be deployed in AKS using the manifest pytorch_job_nccl_entropy.yaml. We will go over this manifest in detail later here. This manifest uses the PyTorchJob CRD defined as a part of Kubeflow Training Operator. This CRD leverages the torchrun under the hood. The torchrun tool sets the required envornment variables (e.g. RANK, WORLD_SIZE, etc.) and runs the workload as specified in the manifests (see section below for detail). Our manifests, basically creates a master and two workers and these workloads will run on nodes that are tainted with key and value as "sku" and "gpu" respectively.
+
+### 7. Tag and push this image to ACR
+Let's create a docker i

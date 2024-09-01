@@ -1,0 +1,49 @@
+apiVersion: "kubeflow.org/v1"
+kind: "PyTorchJob"
+metadata:
+  name: "pytorch-dist-mnist-nccl"
+  namespace: kubeflow
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+            - name: pytorch
+              image: jaganacr08292024.azurecr.io/kubeflow/pytorch-ce-distributed:latest
+              args: ["--backend", "nccl", "--epochs", "10", "--lr", "0.002"]
+              resources: 
+                limits:
+                  nvidia.com/gpu: 1
+          tolerations:
+            - key: "sku"
+              operator: "Equal"
+              value: "gpu"
+              effect: "NoSchedule"
+    Worker:
+      replicas: 2
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers: 
+            - name: pytorch
+              image: jaganacr08292024.azurecr.io/kubeflow/pytorch-ce-distributed:latest
+              args: ["--backend", "nccl", "--epochs", "10", "--lr", "0.002"]
+              resources: 
+                limits:
+                  nvidia.com/gpu: 1
+          tolerations:
+            - key: "sku"
+              operator: "Equal"
+              value: "gpu"
+              effect: "NoSchedule"
+  runPolicy:
+    ttlSecondsAfterFinished: 600
