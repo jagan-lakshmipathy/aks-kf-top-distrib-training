@@ -3,7 +3,7 @@
 ###### 08/31/2024
 
 ### 1. Introduction
-In one of our earlier [work](https://github.com/jagan-lakshmipathy/aks-gpu-job), we demonstrated a step-by-step process on how to run the above simple machine learning workload in a GPU enhanced vCPU in Azure Kubernetes (AKS). Here we will focus on how to distribute training of machine learning models using  [Kubeflow Traing Operator](https://www.kubeflow.org/docs/components/training/), we will use AKS to deploy and test this code. So, we will use Azure CLI commands with kubectl commands to control the Azure Kubernetes Service (AKS) cluster from our console. So, the steps listed here is not completely cloud provider agnostic. We are going to assume that you are going to follow along using AKS. However, you can follow along with any of your preferred cloud provider for the most part with the exception of Azure CLI commands. We will show how to create a GPU nodepool to run our workload in GPUs. However, you may choose to create a CPU nodepools to run your workload as well. Later in this document, we will install the Kubeflow training operator in AKS before we run the workload. let's get started.
+In one of our earlier [work](https://github.com/jagan-lakshmipathy/aks-gpu-job), we demonstrated a step-by-step process on how to run a simple machine learning workload in a GPU enhanced vCPU in Azure Kubernetes (AKS). Here we will focus on how to distribute training of machine learning models using  [Kubeflow Traing Operator](https://www.kubeflow.org/docs/components/training/).We will use AKS to deploy and test this code. So, we will use Azure CLI commands with kubectl commands to control the Azure Kubernetes Service (AKS) cluster from our console. So, the steps listed here is not completely cloud provider agnostic. We are going to assume that you are going to follow along using AKS. However, you can follow along with any of your preferred cloud provider for the most part with the exception of Azure CLI commands. We will show how to create a GPU nodepool to run our workload in GPUs. However, you may choose to create a CPU nodepools to run your workload as well. Let's get started.
 
 ### 2. Prerequesites
 We also assume that you have a good understanding of Azure. If you would like to read about Azure please go [here](https://azure.microsoft.com/en-us/get-started). If you haven't done already installed Azure CLI, do install it as instructed in this [link](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
@@ -13,7 +13,7 @@ We refer you to learn about Azure Kubernetes Service (AKS) from [here](https://l
 We will be using MacOS to run the kubernetes commands and Azure CLI commands using bash shell. You can follow along with your prefered host, operating system and shell.
 
 ### 3. What's in this Repo?
-We will complete this section in the end.
+This repo has a docker file to build the workload image, training workload in mnist\_entropy.py, and a manifest to deploy this workload.
 
 
 ### 4. Authenticate Your Console
@@ -94,10 +94,138 @@ We will install the training operator in AKS using the following command. Please
 kubectl create -k "github.com/kubeflow/training-operator.git/manifests/overlays/standalone?ref=v1.8.0"
 ```
 ### 11. Deploy PyTorchJob
-Deploy the PyTorchJob as follows. This manifest will run pytorch-mnist-ce-distributed image in 3 pods (1 master and 2 workers). Provide details of the run here?
+Deploy the PyTorchJob as follows. This manifest will run pytorch-mnist-ce-distributed image in 3 pods (1 master and 2 workers) by default. Feel free to edit this file as needed. Also, make sure to edit the PyTorchJob.spec.pytorchReplicaSpecs.Master.spec.image and PyTorchJob.spec.pytorchReplicaSpecs.Worker.spec.image fields accordingly. This make take a few minutes depending on how long it takes to initialize the pods. Sometimes, worker pods may timeout and post some errors. Don't worry, the pods will self heal once the master becomes available. After that all the pods will work together and will complete the task. We have shown the output of the master and two workers below.
 
 ```
     kubectl apply -f pytorch_job_nccl_entropy.yaml
+
+
+
+----Master 0 Output -----------------
+train_loss 2.069335988451781  epoch:  0  rank:  0  local_rank:  0
+val_loss 1.7140780908107758  epoch:  0  rank:  0  local_rank:  0
+val_acc 0.372  epoch:  0  rank:  0  local_rank:  0
+1667it [00:10, 153.99it/s]
+train_loss 1.555097908371569  epoch:  1  rank:  0  local_rank:  0
+val_loss 1.4838463139057159  epoch:  1  rank:  0  local_rank:  0
+val_acc 0.4617  epoch:  1  rank:  0  local_rank:  0
+1667it [00:10, 154.90it/s]
+train_loss 1.407126972989258  epoch:  2  rank:  0  local_rank:  0
+val_loss 1.3695419405460358  epoch:  2  rank:  0  local_rank:  0
+val_acc 0.5125  epoch:  2  rank:  0  local_rank:  0
+1667it [00:10, 153.71it/s]
+train_loss 1.2971398550625968  epoch:  3  rank:  0  local_rank:  0
+val_loss 1.2946766710758209  epoch:  3  rank:  0  local_rank:  0
+val_acc 0.5432  epoch:  3  rank:  0  local_rank:  0
+1667it [00:10, 156.65it/s]
+train_loss 1.2047319369235294  epoch:  4  rank:  0  local_rank:  0
+val_loss 1.2222573731899262  epoch:  4  rank:  0  local_rank:  0
+val_acc 0.5685  epoch:  4  rank:  0  local_rank:  0
+1667it [00:10, 158.57it/s]
+train_loss 1.1312249645760621  epoch:  5  rank:  0  local_rank:  0
+val_loss 1.1862873133182525  epoch:  5  rank:  0  local_rank:  0
+val_acc 0.5827  epoch:  5  rank:  0  local_rank:  0
+1667it [00:10, 153.26it/s]
+train_loss 1.0692664025944725  epoch:  6  rank:  0  local_rank:  0
+val_loss 1.1657427067279815  epoch:  6  rank:  0  local_rank:  0
+val_acc 0.5917  epoch:  6  rank:  0  local_rank:  0
+1667it [00:10, 161.34it/s]
+train_loss 1.011953621959715  epoch:  7  rank:  0  local_rank:  0
+val_loss 1.1706829908251761  epoch:  7  rank:  0  local_rank:  0
+val_acc 0.5944  epoch:  7  rank:  0  local_rank:  0
+1667it [00:10, 154.83it/s]
+train_loss 0.9644719697557386  epoch:  8  rank:  0  local_rank:  0
+val_loss 1.2004791494369507  epoch:  8  rank:  0  local_rank:  0
+val_acc 0.5905  epoch:  8  rank:  0  local_rank:  0
+1667it [00:10, 159.13it/s]
+train_loss 0.9194450580884256  epoch:  9  rank:  0  local_rank:  0
+val_loss 1.2093328654766082  epoch:  9  rank:  0  local_rank:  0
+val_acc 0.593  epoch:  9  rank:  0  local_rank:  0
+test_acc 0.6064  epoch:  9  rank:  0  local_rank:  0
+
+----Worker 0 Output -----------------
+train_loss 2.069935476558253  epoch:  0  rank:  1  local_rank:  0
+val_loss 1.7140780908107758  epoch:  0  rank:  1  local_rank:  0
+val_acc 0.372  epoch:  0  rank:  1  local_rank:  0
+1667it [00:10, 155.36it/s]
+train_loss 1.5461383531318142  epoch:  1  rank:  1  local_rank:  0
+val_loss 1.4838463139057159  epoch:  1  rank:  1  local_rank:  0
+val_acc 0.4617  epoch:  1  rank:  1  local_rank:  0
+1667it [00:10, 154.36it/s]
+train_loss 1.400046923343622  epoch:  2  rank:  1  local_rank:  0
+val_loss 1.3695419405460358  epoch:  2  rank:  1  local_rank:  0
+val_acc 0.5125  epoch:  2  rank:  1  local_rank:  0
+1667it [00:10, 155.93it/s]
+train_loss 1.2974522332803318  epoch:  3  rank:  1  local_rank:  0
+val_loss 1.2946766710758209  epoch:  3  rank:  1  local_rank:  0
+val_acc 0.5432  epoch:  3  rank:  1  local_rank:  0
+1667it [00:10, 156.48it/s]
+train_loss 1.2095763878008527  epoch:  4  rank:  1  local_rank:  0
+val_loss 1.2222573731899262  epoch:  4  rank:  1  local_rank:  0
+val_acc 0.5685  epoch:  4  rank:  1  local_rank:  0
+1667it [00:10, 158.08it/s]
+train_loss 1.1378660896311423  epoch:  5  rank:  1  local_rank:  0
+val_loss 1.1862873133182525  epoch:  5  rank:  1  local_rank:  0
+val_acc 0.5827  epoch:  5  rank:  1  local_rank:  0
+1667it [00:10, 154.70it/s]
+train_loss 1.0765880917226331  epoch:  6  rank:  1  local_rank:  0
+val_loss 1.1657427067279815  epoch:  6  rank:  1  local_rank:  0
+val_acc 0.5917  epoch:  6  rank:  1  local_rank:  0
+1667it [00:10, 161.57it/s]
+train_loss 1.0205440365166885  epoch:  7  rank:  1  local_rank:  0
+val_loss 1.1706829908251761  epoch:  7  rank:  1  local_rank:  0
+val_acc 0.5944  epoch:  7  rank:  1  local_rank:  0
+1667it [00:10, 154.27it/s]
+train_loss 0.9742585511606614  epoch:  8  rank:  1  local_rank:  0
+val_loss 1.2004791494369507  epoch:  8  rank:  1  local_rank:  0
+val_acc 0.5905  epoch:  8  rank:  1  local_rank:  0
+1667it [00:10, 158.38it/s]
+train_loss 0.9300361643151459  epoch:  9  rank:  1  local_rank:  0
+val_loss 1.2093328654766082  epoch:  9  rank:  1  local_rank:  0
+val_acc 0.593  epoch:  9  rank:  1  local_rank:  0
+test_acc 0.6064  epoch:  9  rank:  1  local_rank:  0
+
+------ Worker 1 Output -----------------------------
+train_loss 2.0716924758892827  epoch:  0  rank:  2  local_rank:  0
+val_loss 1.7140780908107758  epoch:  0  rank:  2  local_rank:  0
+val_acc 0.372  epoch:  0  rank:  2  local_rank:  0
+1667it [00:10, 155.12it/s]
+train_loss 1.562211665659517  epoch:  1  rank:  2  local_rank:  0
+val_loss 1.4838463139057159  epoch:  1  rank:  2  local_rank:  0
+val_acc 0.4617  epoch:  1  rank:  2  local_rank:  0
+1667it [00:10, 155.06it/s]
+train_loss 1.413986275992711  epoch:  2  rank:  2  local_rank:  0
+val_loss 1.3695419405460358  epoch:  2  rank:  2  local_rank:  0
+val_acc 0.5125  epoch:  2  rank:  2  local_rank:  0
+1667it [00:10, 154.08it/s]
+train_loss 1.304555330686964  epoch:  3  rank:  2  local_rank:  0
+val_loss 1.2946766710758209  epoch:  3  rank:  2  local_rank:  0
+val_acc 0.5432  epoch:  3  rank:  2  local_rank:  0
+1667it [00:10, 155.93it/s]
+train_loss 1.2175320370975338  epoch:  4  rank:  2  local_rank:  0
+val_loss 1.2222573731899262  epoch:  4  rank:  2  local_rank:  0
+val_acc 0.5685  epoch:  4  rank:  2  local_rank:  0
+1667it [00:10, 156.98it/s]
+train_loss 1.1497726011540836  epoch:  5  rank:  2  local_rank:  0
+val_loss 1.1862873133182525  epoch:  5  rank:  2  local_rank:  0
+val_acc 0.5827  epoch:  5  rank:  2  local_rank:  0
+1667it [00:10, 155.29it/s]
+train_loss 1.0878734888523443  epoch:  6  rank:  2  local_rank:  0
+val_loss 1.1657427067279815  epoch:  6  rank:  2  local_rank:  0
+val_acc 0.5917  epoch:  6  rank:  2  local_rank:  0
+1667it [00:10, 159.15it/s]
+train_loss 1.030855577427896  epoch:  7  rank:  2  local_rank:  0
+val_loss 1.1706829908251761  epoch:  7  rank:  2  local_rank:  0
+val_acc 0.5944  epoch:  7  rank:  2  local_rank:  0
+1667it [00:10, 154.11it/s]
+train_loss 0.9802147078170845  epoch:  8  rank:  2  local_rank:  0
+val_loss 1.2004791494369507  epoch:  8  rank:  2  local_rank:  0
+val_acc 0.5905  epoch:  8  rank:  2  local_rank:  0
+1667it [00:10, 157.96it/s]
+train_loss 0.9316146925994573  epoch:  9  rank:  2  local_rank:  0
+val_loss 1.2093328654766082  epoch:  9  rank:  2  local_rank:  0
+val_acc 0.593  epoch:  9  rank:  2  local_rank:  0
+test_acc 0.6064  epoch:  9  rank:  2  local_rank:  0
 ```
 ### 12. Job Monitoring Commands:
 ```
