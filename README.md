@@ -42,7 +42,7 @@ We will issue the following Azure CLI commands to register the container service
 ```
 ### 6. Add nodepool to AKS Cluster
 
-We wukk add a nodepool with 3 nodes(check Azure documentation to see the Azure's latest offering). You can choose any GPU loaded vCPU from Azure offering that you are eligible to request as per your quota requirements. I tried these GPU loaded nodes Standard\_NC24s\_v3, and Standard\_NC40ads\_H100\_v5 from the NCv3-series and NCads H100 v5-series familes respectively. But the following command adds 3 40 core vCPU with 1 H100 GPU each. We can adjust the min and max counts depending on your workload. We picked a min of 1 and max of 3. This command also taints the nodes with key and value with 'sku' and 'gpu' respectively.
+We will add a nodepool with 3 nodes(check Azure documentation to see the Azure's latest offering). You can choose any GPU loaded vCPU from Azure offering that you are eligible to request as per your quota requirements. I tried these GPU loaded nodes Standard\_NC24s\_v3, and Standard\_NC40ads\_H100\_v5 from the NCv3-series and NCads H100 v5-series familes respectively. But the following command adds 3 40 core vCPU with 1 H100 GPU each. We can adjust the min and max counts depending on your workload. We picked a min of 1 and max of 3. This command also taints the nodes with key and value with 'sku' and 'gpu' respectively.
 
 ```
     bash> az aks nodepool add --resource-group <name-of-resource-group> --cluster-name <cluster-name> --name <nodepool-name> --node-count 2 --node-vm-size Standard_NC40ads_H100_v5 --node-taints sku=gpu:NoSchedule --aks-custom-headers UseGPUDedicatedVHD=true --enable-cluster-autoscaler --min-count 1 --max-count 3
